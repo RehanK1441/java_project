@@ -8,16 +8,21 @@ import javax.swing.SwingUtilities;
  * individual components remain responsible for their own behavior.
  */
 public final class Main {
+    
     private Main() {
+        // Prevents instantiation of the entry point class
     }
 
     public static void main(String[] args) {
-        PeerDiscovery peerDiscovery = new PeerDiscovery();
+        // Dynamically grabs the OS username (e.g., Rehan) for network identification
+        String localHostname = System.getProperty("user.name", "Unknown-Node");
+        
+        PeerDiscovery peerDiscovery = new PeerDiscovery(localHostname);
 
+        // This method now inherently spawns its own daemon thread, preventing UI blocking
+        peerDiscovery.start();
+
+        // Launches the GUI on the Event Dispatch Thread
         SwingUtilities.invokeLater(() -> new Dashboard(peerDiscovery));
-
-        Thread discoveryThread = new Thread(peerDiscovery::start, "peer-discovery");
-        discoveryThread.setDaemon(true);
-        discoveryThread.start();
     }
 }
