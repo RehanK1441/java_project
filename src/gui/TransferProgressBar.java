@@ -7,10 +7,11 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
 /**
- * A custom Swing progress bar with a simple percentage and fill display.
+ * A custom Swing progress bar with a flat UI, custom colors, and dynamic status text.
  */
 public final class TransferProgressBar extends JProgressBar {
     private static final Color PROGRESS_COLOR = new Color(40, 114, 255);
@@ -22,7 +23,19 @@ public final class TransferProgressBar extends JProgressBar {
         setPreferredSize(new Dimension(400, 22));
         setOpaque(true);
         setBorderPainted(false);
+        setStringPainted(true); // Ensures the string is tracked internally
         setUI(new CustomProgressBarUI());
+    }
+
+    /**
+     * Safely updates the progress UI from background network threads.
+     * Prevents EDT (Event Dispatch Thread) violations.
+     */
+    public void updateStatus(int percentage, String text) {
+        SwingUtilities.invokeLater(() -> {
+            setValue(percentage);
+            setString(text); // Stores the custom text (e.g., "Sending File.txt")
+        });
     }
 
     public void setIndeterminate(boolean indeterminate) {
@@ -31,25 +44,35 @@ public final class TransferProgressBar extends JProgressBar {
     }
 
     private static final class CustomProgressBarUI extends BasicProgressBarUI {
+        @Override
         protected void paint(Graphics graphics, javax.swing.JComponent component, int width, int height) {
             Graphics2D g = (Graphics2D) graphics.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            // Draw Background
             g.setColor(Color.WHITE);
             g.fillRect(0, 0, width, height);
-            if (((JProgressBar) component).isIndeterminate()) {
+            
+            JProgressBar bar = (JProgressBar) component;
+            String dynamicText = bar.getString() != null ? bar.getString() : "";
+
+            if (bar.isIndeterminate()) {
                 g.setColor(PROGRESS_COLOR);
                 g.fillRect(0, 0, width, height);
-                g.setColor(Color.BLACK);
-                g.drawString("Transferring...", 2, height - 4);
+                g.setColor(Color.WHITE);
+                g.drawString(dynamicText.isEmpty() ? "Transferring..." : dynamicText, 5, height - 6);
             } else {
-                int progress = ((JProgressBar) component).getValue();
+                int progress = bar.getValue();
                 if (progress > 0) {
-                    int progressWidth = width * progress / ((JProgressBar) component).getMaximum();
+                    int progressWidth = (int) ((double) width * progress / bar.getMaximum());
                     g.setColor(PROGRESS_COLOR);
                     g.fillRect(0, 0, progressWidth, height);
                 }
                 g.setColor(Color.BLACK);
-                g.drawString(progress + "%", 1, height - 4);
+                
+                // Combine the Dashboard status text with the percentage
+                String statusText = dynamicText.isEmpty() ? progress + "%" : dynamicText + " (" + progress + "%)";
+                g.drawString(statusText, 5, height - 6);
             }
             g.dispose();
         }
