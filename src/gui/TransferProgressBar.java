@@ -14,7 +14,6 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
  */
 public final class TransferProgressBar extends JProgressBar {
     private static final Color PROGRESS_COLOR = new Color(40, 114, 255);
-    private boolean indeterminate;
 
     public TransferProgressBar() {
         setMinimum(0);
@@ -27,22 +26,17 @@ public final class TransferProgressBar extends JProgressBar {
     }
 
     public void setIndeterminate(boolean indeterminate) {
-        this.indeterminate = indeterminate;
+        super.setIndeterminate(indeterminate);
         repaint();
     }
 
-    private boolean isIndeterminate() {
-        return indeterminate;
-    }
-
     private static final class CustomProgressBarUI extends BasicProgressBarUI {
-        @Override
         protected void paint(Graphics graphics, javax.swing.JComponent component, int width, int height) {
             Graphics2D g = (Graphics2D) graphics.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g.setColor(Color.WHITE);
             g.fillRect(0, 0, width, height);
-            if (((TransferProgressBar) component).isIndeterminate()) {
+            if (((JProgressBar) component).isIndeterminate()) {
                 g.setColor(PROGRESS_COLOR);
                 g.fillRect(0, 0, width, height);
                 g.setColor(Color.BLACK);

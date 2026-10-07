@@ -8,6 +8,7 @@ import network.PeerDiscovery;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -25,7 +26,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
-import javax.swing.TransferSupport;
 
 /**
  * Main Swing dashboard for peer discovery, file selection, and transfers.
@@ -82,14 +82,14 @@ public final class Dashboard extends JFrame {
         panel.add(progressBar);
         panel.setTransferHandler(new TransferHandler() {
             @Override
-            public boolean canImport(TransferSupport support) {
+            public boolean canImport(TransferHandler.TransferSupport support) {
                 return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
             }
 
             @Override
-            public void importData(TransferSupport support) {
+            public boolean importData(TransferHandler.TransferSupport support) {
                 if (!canImport(support) || selectedPeer == null) {
-                    return;
+                    return false;
                 }
                 try {
                     List<?> droppedFiles = (List<?>) support.getTransferable().getTransferData(
@@ -99,8 +99,10 @@ public final class Dashboard extends JFrame {
                             executors.execute(() -> sendFile(file, selectedPeer));
                         }
                     }
-                } catch (IOException exception) {
+                    return true;
+                } catch (IOException | UnsupportedFlavorException exception) {
                     showError(exception.getMessage());
+                    return false;
                 }
             }
         });
