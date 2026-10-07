@@ -45,7 +45,11 @@ public final class TransferProgressBar extends JProgressBar {
 
     private static final class CustomProgressBarUI extends BasicProgressBarUI {
         @Override
-        protected void paint(Graphics graphics, javax.swing.JComponent component, int width, int height) {
+        public void paint(Graphics graphics, javax.swing.JComponent component) {
+            // Extract width and height directly from the component
+            int width = component.getWidth();
+            int height = component.getHeight();
+
             Graphics2D g = (Graphics2D) graphics.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             

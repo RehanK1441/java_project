@@ -57,7 +57,7 @@ public final class PeerDiscovery {
     public List<Peer> getPeers() {
         return Collections.unmodifiableList(new ArrayList<>(peers));
     }
-
+    @SuppressWarnings("deprecation")
     private void discover() {
         try (MulticastSocket socket = new MulticastSocket()) {
             socket.setReuseAddress(true);
